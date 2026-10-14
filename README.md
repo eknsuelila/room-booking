@@ -173,6 +173,35 @@ cd backend && ./mvnw -B verify          # 44 tests: unit (Mockito) + integration
 cd frontend && npx ng test --watch=false --browsers=ChromeHeadless   # 20 specs
 ```
 
+## Continuous deployment
+
+Every push to `main` is built and tested by GitHub Actions (`.github/workflows/ci.yml`). If CI passes,
+the new version is **deployed automatically** to a home-lab VM (http://192.168.86.15:8094).
+
+```mermaid
+flowchart LR
+    A[git push main] --> B[GitHub Actions CI<br/>build + tests]
+    B -- passed --> C[VM timer, every 2 min<br/>deploy/auto-deploy.sh]
+    C --> D[git reset to new commit<br/>docker compose up --build]
+    D --> E{health check<br/>page 200, API 401}
+    E -- ok --> F[live ✅]
+    E -- fails --> G[automatic rollback ↩]
+```
+
+The VM sits in a private network that GitHub can't reach, so the VM **pulls**: a systemd timer runs
+[`deploy/auto-deploy.sh`](deploy/auto-deploy.sh), which only deploys commits whose CI checks succeeded, and rolls back if the
+build or the health check fails. This avoids opening any port to the internet, and avoids self-hosted
+runners, which GitHub advises against for public repositories.
+
+**One-time setup on the VM** (user in the `docker` group, repo cloned to `~/apps/room-booking`):
+
+```bash
+cd ~/apps/room-booking && ./deploy/install-auto-deploy.sh
+journalctl -u auto-deploy@room-booking -f        # watch deployments
+```
+
+Secrets (DB password, `JWT_SECRET`) live in an untracked `docker-compose.override.yml` on the VM and are never committed.
+
 ## Documentation
 
 **[docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md)** – a detailed guide: architecture diagrams, the request
