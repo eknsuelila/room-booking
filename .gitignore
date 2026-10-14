@@ -9,6 +9,10 @@ frontend/.angular/
 
 # IDE / OS clutter
 .idea/
-.vscode/
+.vscode/*
+!/.vscode/launch.json
+!/.vscode/tasks.json
+!/.vscode/extensions.json
+frontend/.vscode/
 *.iml
 .DS_Store
