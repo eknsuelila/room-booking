@@ -1,0 +1,27 @@
+# =====================================================================================
+# "prod" profile: only the keys listed here override application.yml.
+# Activated with SPRING_PROFILES_ACTIVE=prod (docker-compose.yml, Render, Railway...).
+# Everything environment-specific comes from environment variables so the same Docker
+# image can run anywhere without being rebuilt.
+# =====================================================================================
+server:
+  # Inside Docker the backend listens on 8080 (nginx proxies to backend:8080).
+  # Hosting platforms such as Render/Railway inject PORT; we honour it if present.
+  port: ${PORT:8080}
+
+spring:
+  datasource:
+    # Real PostgreSQL database. Flyway creates the tables on first start.
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/roombooking}
+    username: ${DB_USERNAME:roombooking}
+    password: ${DB_PASSWORD:roombooking}
+  h2:
+    console:
+      enabled: false   # never expose a database console in production
+
+app:
+  # Keep demo data on by default so a portfolio deployment is immediately explorable.
+  # The seeder is idempotent: it does nothing if the admin account already exists.
+  seed-demo-data: ${SEED_DEMO_DATA:true}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:8094}

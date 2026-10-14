@@ -1,0 +1,66 @@
+<div class="page-header">
+  <div>
+    <h1>My bookings</h1>
+    <p>Your reservations. Cancel or reschedule anything that hasn't started yet.</p>
+  </div>
+  <a class="btn btn-primary" routerLink="/find">+ New booking</a>
+</div>
+
+@if (saved) {
+  <div class="alert alert-success" role="status">Booking saved. See you there!</div>
+}
+@if (error()) {
+  <div class="alert" role="alert">{{ error() }}</div>
+}
+
+<div class="tabs" role="tablist">
+  <button type="button" role="tab" [class.active]="scope() === 'upcoming'" [attr.aria-selected]="scope() === 'upcoming'"
+          (click)="setScope('upcoming')">Upcoming</button>
+  <button type="button" role="tab" [class.active]="scope() === 'past'" [attr.aria-selected]="scope() === 'past'"
+          (click)="setScope('past')">Past &amp; cancelled</button>
+</div>
+
+<div class="list" [class.is-loading]="loading()">
+  @for (b of bookings(); track b.id) {
+    <article class="card booking" [class.cancelled]="b.status === 'CANCELLED'">
+      <!-- 'T00:00' trick: parse the date part in local time for the DatePipe -->
+      <div class="when">
+        <span class="day">{{ b.startTime.slice(0, 10) + 'T00:00' | date: 'EEE d MMM' }}</span>
+        <span class="time">{{ b | timeRange }}</span>
+      </div>
+      <div class="what">
+        <h3>{{ b.title }}</h3>
+        <p class="muted">
+          <a [routerLink]="['/rooms', b.roomId]" [queryParams]="{ date: b.startTime.slice(0, 10) }">{{ b.roomName }}</a>
+          · {{ b.roomLocation }} · {{ b.attendees }} {{ b.attendees === 1 ? 'person' : 'people' }}
+        </p>
+      </div>
+      <div class="row-actions">
+        @if (b.status === 'CANCELLED') {
+          <span class="badge badge-CANCELLED">Cancelled</span>
+        } @else if (scope() === 'upcoming' && !hasStarted(b)) {
+          @if (confirmingId() === b.id) {
+            <span class="muted">Cancel this booking?</span>
+            <button class="btn btn-danger btn-sm" type="button" [disabled]="busyId() === b.id" (click)="cancel(b)">Yes, cancel</button>
+            <button class="btn btn-ghost btn-sm" type="button" (click)="confirmingId.set(null)">Keep it</button>
+          } @else {
+            <a class="btn btn-secondary btn-sm" [routerLink]="['/bookings', b.id, 'edit']">Reschedule</a>
+            <button class="btn btn-ghost btn-sm" type="button" (click)="confirmingId.set(b.id)">Cancel</button>
+          }
+        } @else if (scope() === 'upcoming') {
+          <span class="badge badge-CONFIRMED">In progress</span>
+        }
+      </div>
+    </article>
+  } @empty {
+    <div class="card empty">
+      @if (loading()) {
+        Loading…
+      } @else if (scope() === 'upcoming') {
+        No upcoming bookings. <a routerLink="/find">Find a room</a>
+      } @else {
+        Nothing here yet.
+      }
+    </div>
+  }
+</div>

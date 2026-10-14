@@ -1,0 +1,14 @@
+# Backend build output and the downloaded Maven wrapper jar
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+
+# Frontend dependencies and build output
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+
+# IDE / OS clutter
+.idea/
+.vscode/
+*.iml
+.DS_Store

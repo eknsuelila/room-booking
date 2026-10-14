@@ -1,0 +1,111 @@
+<div class="page-header">
+  <div>
+    <h1>Manage rooms</h1>
+    <p>Create, edit, activate or deactivate meeting rooms.</p>
+  </div>
+  @if (editing() === 'closed') {
+    <button class="btn btn-primary" type="button" (click)="openNew()">+ New room</button>
+  }
+</div>
+
+@if (notice()) {
+  <div class="alert alert-success" role="status">{{ notice() }}</div>
+}
+@if (error()) {
+  <div class="alert" role="alert">{{ error() }}</div>
+}
+
+<!-- Create / edit form -->
+@if (editing() !== 'closed') {
+  <form class="card room-form" [formGroup]="form" (ngSubmit)="save()" novalidate>
+    <h2>{{ editing() === 'new' ? 'New room' : 'Edit room' }}</h2>
+    @if (formError()) {
+      <div class="alert" role="alert">{{ formError() }}</div>
+    }
+    <div class="form-grid">
+      <div class="field">
+        <label for="name">Name *</label>
+        <input id="name" class="input" formControlName="name" />
+        @if (showError('name')) { <span class="error">Name is required.</span> }
+      </div>
+      <div class="field">
+        <label for="location">Location *</label>
+        <input id="location" class="input" formControlName="location" placeholder="Floor 3, East wing" />
+        @if (showError('location')) { <span class="error">Location is required.</span> }
+      </div>
+      <div class="field">
+        <label for="capacity">Capacity *</label>
+        <input id="capacity" class="input" type="number" min="1" formControlName="capacity" />
+        @if (showError('capacity')) { <span class="error">Between 1 and 500.</span> }
+      </div>
+      <div class="field">
+        <label for="amenities">Amenities</label>
+        <input id="amenities" class="input" formControlName="amenities" placeholder="Projector, Whiteboard, Video Conference" />
+        <span class="hint muted">Comma-separated.</span>
+      </div>
+      <div class="field full">
+        <label for="description">Description</label>
+        <textarea id="description" class="input" formControlName="description"></textarea>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-secondary" type="button" (click)="closeForm()">Cancel</button>
+      <button class="btn btn-primary" type="submit" [disabled]="saving()">{{ saving() ? 'Saving…' : 'Save room' }}</button>
+    </div>
+  </form>
+}
+
+<div class="card table-card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Location</th>
+          <th>Capacity</th>
+          <th>Amenities</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (room of rooms(); track room.id) {
+          <tr [class.inactive]="!room.active">
+            <td><a [routerLink]="['/rooms', room.id]"><strong>{{ room.name }}</strong></a></td>
+            <td class="muted">{{ room.location }}</td>
+            <td>{{ room.capacity }}</td>
+            <td>
+              <div class="chips">
+                @for (a of room.amenities; track a) { <span class="chip">{{ a }}</span> }
+              </div>
+            </td>
+            <td>
+              @if (room.active) {
+                <span class="badge badge-CONFIRMED">Active</span>
+              } @else {
+                <span class="badge badge-inactive">Inactive</span>
+              }
+            </td>
+            <td>
+              <div class="row-actions">
+                @if (confirmingDeleteId() === room.id) {
+                  <span class="muted">Delete permanently?</span>
+                  <button class="btn btn-danger btn-sm" type="button" (click)="delete(room)">Yes</button>
+                  <button class="btn btn-ghost btn-sm" type="button" (click)="confirmingDeleteId.set(null)">No</button>
+                } @else {
+                  <button class="btn btn-secondary btn-sm" type="button" (click)="openEdit(room)">Edit</button>
+                  <button class="btn btn-secondary btn-sm" type="button" (click)="toggleActive(room)">
+                    {{ room.active ? 'Deactivate' : 'Activate' }}
+                  </button>
+                  <button class="btn btn-ghost btn-sm" type="button" (click)="confirmingDeleteId.set(room.id)">Delete</button>
+                }
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="6" class="empty">@if (loading()) { Loading… } @else { No rooms yet. }</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

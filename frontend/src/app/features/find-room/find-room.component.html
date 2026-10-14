@@ -1,0 +1,67 @@
+<div class="page-header">
+  <div>
+    <h1>Find a room</h1>
+    <p>Tell us when and how many people – we'll show every room that's free for the whole slot.</p>
+  </div>
+</div>
+
+<form class="card search" [formGroup]="form" (ngSubmit)="search()" novalidate>
+  <div class="field">
+    <label for="date">Date</label>
+    <input id="date" class="input" type="date" formControlName="date" [min]="minDate" />
+  </div>
+  <div class="field">
+    <label for="start">From</label>
+    <select id="start" class="input" formControlName="start">
+      @for (t of times; track t) { <option [value]="t">{{ t }}</option> }
+    </select>
+  </div>
+  <div class="field">
+    <label for="end">To</label>
+    <select id="end" class="input" formControlName="end">
+      @for (t of times; track t) { <option [value]="t">{{ t }}</option> }
+    </select>
+  </div>
+  <div class="field">
+    <label for="attendees">People</label>
+    <input id="attendees" class="input" type="number" min="1" formControlName="attendees" />
+  </div>
+  <button class="btn btn-primary" type="submit" [disabled]="loading()">
+    {{ loading() ? 'Searching…' : 'Search' }}
+  </button>
+</form>
+@if (form.hasError('endBeforeStart')) {
+  <p class="error-text">End time must be after start time.</p>
+}
+
+@if (error()) {
+  <div class="alert" role="alert">{{ error() }}</div>
+}
+
+@if (results(); as rooms) {
+  @if (searched(); as s) {
+    <h2 class="results-title">
+      {{ rooms.length }} {{ rooms.length === 1 ? 'room' : 'rooms' }} free on {{ s.date }}, {{ s.start }}–{{ s.end }}
+      <span class="muted">({{ duration() }}, {{ s.attendees }} people)</span>
+    </h2>
+  }
+  <div class="results">
+    @for (room of rooms; track room.id) {
+      <article class="card result">
+        <div>
+          <h3>{{ room.name }}</h3>
+          <p class="muted">{{ room.location }} · up to {{ room.capacity }} people</p>
+          <div class="chips">
+            @for (a of room.amenities; track a) { <span class="chip">{{ a }}</span> }
+          </div>
+        </div>
+        <div class="row-actions">
+          <a class="btn btn-ghost btn-sm" [routerLink]="['/rooms', room.id]" [queryParams]="{ date: searched()?.date }">Schedule</a>
+          <a class="btn btn-primary btn-sm" routerLink="/bookings/new" [queryParams]="bookParams(room)">Book</a>
+        </div>
+      </article>
+    } @empty {
+      <div class="card empty">No room is free for that slot. Try a different time or fewer people.</div>
+    }
+  </div>
+}

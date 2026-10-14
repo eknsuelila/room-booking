@@ -1,0 +1,43 @@
+<div class="card auth-card">
+  <div class="logo">RB</div>
+  <h1>Room Booking</h1>
+  <p class="subtitle">Log in to book a meeting room</p>
+
+  @if (error()) {
+    <div class="alert" role="alert">{{ error() }}</div>
+  }
+
+  <!-- (ngSubmit) fires on Enter or on clicking the submit button. novalidate turns off the
+       browser's own validation bubbles so our messages are shown instead. -->
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="field">
+      <label for="email">Email</label>
+      <input id="email" class="input" type="email" formControlName="email" autocomplete="email" />
+      <!-- Only show errors after the user has interacted with the field ("touched") -->
+      @if (form.controls.email.touched && form.controls.email.invalid) {
+        <span class="error">Enter a valid email address.</span>
+      }
+    </div>
+
+    <div class="field">
+      <label for="password">Password</label>
+      <input id="password" class="input" type="password" formControlName="password" autocomplete="current-password" />
+      @if (form.controls.password.touched && form.controls.password.invalid) {
+        <span class="error">Password is required.</span>
+      }
+    </div>
+
+    <button class="btn btn-primary" type="submit" [disabled]="loading()">
+      {{ loading() ? 'Logging in…' : 'Log in' }}
+    </button>
+  </form>
+
+  <div class="demo">
+    Just looking? Try a demo account:<br />
+    <a href="" (click)="$event.preventDefault(); useDemo('admin')">Use admin demo</a>
+    ·
+    <a href="" (click)="$event.preventDefault(); useDemo('user')">Use user demo</a>
+  </div>
+
+  <p class="switch">No account? <a routerLink="/register">Create one</a></p>
+</div>

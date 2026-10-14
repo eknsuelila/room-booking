@@ -1,0 +1,57 @@
+<div class="page-header">
+  <div>
+    <h1>Dashboard</h1>
+    <p>
+      @if (stats(); as s) {
+        Week of {{ s.weekStart + 'T00:00' | date: 'd MMM' }} – {{ s.weekEnd + 'T00:00' | date: 'd MMM y' }}
+      } @else { &nbsp; }
+    </p>
+  </div>
+  <div class="header-actions">
+    <a class="btn btn-secondary" routerLink="/admin/bookings">All bookings</a>
+    <a class="btn btn-primary" routerLink="/admin/rooms">Manage rooms</a>
+  </div>
+</div>
+
+@if (error()) {
+  <div class="alert" role="alert">{{ error() }}</div>
+}
+
+@if (loading()) {
+  <p class="muted">Loading…</p>
+} @else {
+  @if (stats(); as s) {
+    <section class="stat-grid">
+      <div class="card stat">
+        <span class="stat-label">Bookings today</span>
+        <span class="stat-value">{{ s.bookingsToday }}</span>
+      </div>
+      <div class="card stat">
+        <span class="stat-label">Bookings this week</span>
+        <span class="stat-value">{{ s.bookingsThisWeek }}</span>
+        <span class="stat-hint">{{ s.cancelledThisWeek }} cancelled</span>
+      </div>
+      <div class="card stat">
+        <span class="stat-label">Avg. utilization</span>
+        <span class="stat-value">{{ s.averageUtilization }}%</span>
+        <span class="stat-hint">across {{ s.activeRooms }} active rooms (08–20h, 7 days)</span>
+      </div>
+      <div class="card stat">
+        <span class="stat-label">Busiest hour</span>
+        <span class="stat-value">{{ busiestHour(s) }}</span>
+        <span class="stat-hint">most bookings this week</span>
+      </div>
+    </section>
+
+    <section class="chart-grid">
+      <div class="card">
+        <h2>Utilization per room (this week)</h2>
+        <div class="chart-box"><canvas #utilizationChart aria-label="Utilization per room"></canvas></div>
+      </div>
+      <div class="card">
+        <h2>Busiest hours (this week)</h2>
+        <div class="chart-box"><canvas #hoursChart aria-label="Bookings per hour"></canvas></div>
+      </div>
+    </section>
+  }
+}

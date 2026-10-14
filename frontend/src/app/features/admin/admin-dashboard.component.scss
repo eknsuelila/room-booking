@@ -1,0 +1,25 @@
+.header-actions { display: flex; gap: 8px; }
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.stat { display: flex; flex-direction: column; gap: 4px; }
+.stat-label { color: var(--text-muted); font-weight: 500; }
+.stat-value { font-size: 30px; font-weight: 700; }
+.stat-hint { font-size: 12px; color: var(--text-muted); }
+
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+/* Chart.js needs a sized, relatively positioned parent when maintainAspectRatio is false. */
+.chart-box { position: relative; height: 300px; }
+
+@media (max-width: 900px) {
+  .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .chart-grid { grid-template-columns: 1fr; }
+}

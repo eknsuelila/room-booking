@@ -1,0 +1,3 @@
+# Files Docker should NOT send to the build (smaller, faster, reproducible builds).
+target/
+.mvn/wrapper/maven-wrapper.jar

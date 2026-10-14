@@ -1,0 +1,30 @@
+.amenity-field { flex: 1; }
+
+/* Responsive card grid: as many 260px-wide columns as fit. */
+.room-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  transition: opacity 0.15s;
+  &.is-loading { opacity: 0.6; }
+  .full { grid-column: 1 / -1; }
+}
+
+.room-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  h2 { margin: 0; }
+}
+
+.room-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.capacity { font-weight: 600; color: var(--text-muted); white-space: nowrap; }
+.location { margin: -6px 0 0; }
+.description { margin: 0; color: var(--text); line-height: 1.4; }
+
+.room-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;     /* pushes the buttons to the bottom so all cards line up */
+  padding-top: 6px;
+}

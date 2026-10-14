@@ -1,0 +1,30 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: opacity 0.15s;
+  &.is-loading { opacity: 0.6; }
+}
+
+.booking {
+  display: grid;
+  grid-template-columns: 130px minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  padding: 14px 20px;
+  &.cancelled { opacity: 0.65; h3 { text-decoration: line-through; } }
+  h3 { margin: 0 0 2px; }
+  p { margin: 0; }
+}
+
+.when {
+  display: flex;
+  flex-direction: column;
+  .day { font-weight: 700; }
+  .time { color: var(--text-muted); }
+}
+
+@media (max-width: 640px) {
+  .booking { grid-template-columns: 1fr; gap: 8px; }
+  .row-actions { justify-content: flex-start; }
+}

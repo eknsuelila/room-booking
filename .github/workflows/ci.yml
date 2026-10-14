@@ -1,0 +1,47 @@
+# =====================================================================================
+# Continuous Integration (GitHub Actions).
+# On every push to main and every pull request, GitHub starts fresh Ubuntu machines and
+# builds + tests both halves of the app. A green check mark tells reviewers the project
+# compiles and all tests pass - without them having to clone it.
+# The two jobs run in PARALLEL.
+# =====================================================================================
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend      # every "run" step executes inside backend/
+    steps:
+      - uses: actions/checkout@v4       # get the code
+      - uses: actions/setup-java@v4     # install JDK 17 and cache ~/.m2 between runs
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: maven
+      - name: Build and run tests (unit + integration on in-memory H2)
+        run: ./mvnw -B verify
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4     # Node 18 + npm cache keyed on package-lock.json
+        with:
+          node-version: 18
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci                     # exact versions from package-lock.json
+      - name: Unit tests (headless Chrome is preinstalled on GitHub runners)
+        run: npx ng test --watch=false --browsers=ChromeHeadless
+      - name: Production build
+        run: npx ng build --configuration production

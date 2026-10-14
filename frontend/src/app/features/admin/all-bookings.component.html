@@ -1,0 +1,92 @@
+<div class="page-header">
+  <div>
+    <h1>All bookings</h1>
+    <p>
+      @if (page(); as p) { {{ p.totalElements }} bookings match } @else { &nbsp; }
+    </p>
+  </div>
+</div>
+
+<form class="card filters" [formGroup]="filters">
+  <div class="field">
+    <label for="f-date">Day</label>
+    <input id="f-date" class="input" type="date" formControlName="date" />
+  </div>
+  <div class="field">
+    <label for="f-room">Room</label>
+    <select id="f-room" class="input" formControlName="roomId">
+      <option value="">All rooms</option>
+      @for (r of rooms(); track r.id) { <option [value]="r.id">{{ r.name }}</option> }
+    </select>
+  </div>
+  <div class="field">
+    <label for="f-status">Status</label>
+    <select id="f-status" class="input" formControlName="status">
+      <option value="">Any status</option>
+      @for (s of statuses; track s) { <option [value]="s">{{ s === 'CONFIRMED' ? 'Confirmed' : 'Cancelled' }}</option> }
+    </select>
+  </div>
+  <button class="btn btn-ghost" type="button" (click)="clear()">Clear</button>
+</form>
+
+@if (error()) {
+  <div class="alert" role="alert">{{ error() }}</div>
+}
+
+<div class="card table-card" [class.is-loading]="loading()">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>When</th>
+          <th>Room</th>
+          <th>Title</th>
+          <th>Booked by</th>
+          <th>People</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (b of page()?.content ?? []; track b.id) {
+          <tr>
+            <td>
+              <strong>{{ b.startTime.slice(0, 10) + 'T00:00' | date: 'EEE d MMM y' }}</strong><br />
+              <span class="muted">{{ b | timeRange }}</span>
+            </td>
+            <td>{{ b.roomName }}</td>
+            <td>{{ b.title }}</td>
+            <td>{{ b.userName }}</td>
+            <td>{{ b.attendees }}</td>
+            <td><span class="badge badge-{{ b.status }}">{{ b.status === 'CONFIRMED' ? 'Confirmed' : 'Cancelled' }}</span></td>
+            <td>
+              <div class="row-actions">
+                @if (canCancel(b)) {
+                  @if (confirmingId() === b.id) {
+                    <span class="muted">Cancel?</span>
+                    <button class="btn btn-danger btn-sm" type="button" (click)="cancel(b)">Yes</button>
+                    <button class="btn btn-ghost btn-sm" type="button" (click)="confirmingId.set(null)">No</button>
+                  } @else {
+                    <button class="btn btn-ghost btn-sm" type="button" (click)="confirmingId.set(b.id)">Cancel</button>
+                  }
+                }
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="7" class="empty">@if (loading()) { Loading… } @else { No bookings match these filters. }</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (page(); as p) {
+    @if (p.totalPages > 1) {
+      <div class="pagination">
+        <button class="btn btn-secondary btn-sm" type="button" [disabled]="p.page === 0" (click)="goToPage(p.page - 1)">← Prev</button>
+        <span class="muted">Page {{ p.page + 1 }} of {{ p.totalPages }}</span>
+        <button class="btn btn-secondary btn-sm" type="button" [disabled]="p.page >= p.totalPages - 1" (click)="goToPage(p.page + 1)">Next →</button>
+      </div>
+    }
+  }
+</div>

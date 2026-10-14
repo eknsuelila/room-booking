@@ -1,0 +1,60 @@
+<div class="page-header">
+  <div>
+    <h1>Rooms</h1>
+    <p>Pick a room to see its schedule, or let us find a free one for you.</p>
+  </div>
+  <a class="btn btn-primary" routerLink="/find">Find a free room</a>
+</div>
+
+<!-- Filters -->
+<div class="card filters">
+  <div class="field">
+    <label for="minCapacity">Min. capacity</label>
+    <input id="minCapacity" class="input" type="number" min="1" placeholder="Any" [formControl]="minCapacity" />
+  </div>
+  <div class="field amenity-field">
+    <label>Amenities</label>
+    <div class="chips">
+      <!-- @for needs a `track` expression so Angular can reuse DOM nodes when the list changes -->
+      @for (a of allAmenities(); track a) {
+        <button type="button" class="chip" [class.selected]="isSelected(a)"
+                [attr.aria-pressed]="isSelected(a)" (click)="toggleAmenity(a)">{{ a }}</button>
+      }
+    </div>
+  </div>
+  @if (minCapacity.value || selectedAmenities().length) {
+    <button class="btn btn-ghost" type="button" (click)="clearFilters()">Clear</button>
+  }
+</div>
+
+@if (error()) {
+  <div class="alert" role="alert">{{ error() }}</div>
+}
+
+<div class="room-grid" [class.is-loading]="loading()">
+  @for (room of rooms(); track room.id) {
+    <article class="card room-card">
+      <div class="room-head">
+        <h2>{{ room.name }}</h2>
+        <span class="capacity" title="Capacity">👥 {{ room.capacity }}</span>
+      </div>
+      <p class="muted location">{{ room.location }}</p>
+      @if (room.description) {
+        <p class="description">{{ room.description }}</p>
+      }
+      <div class="chips">
+        @for (a of room.amenities; track a) {
+          <span class="chip">{{ a }}</span>
+        }
+      </div>
+      <div class="room-actions">
+        <a class="btn btn-secondary btn-sm" [routerLink]="['/rooms', room.id]">View schedule</a>
+        <a class="btn btn-primary btn-sm" routerLink="/bookings/new" [queryParams]="{ roomId: room.id }">Book</a>
+      </div>
+    </article>
+  } @empty {
+    <div class="card empty full">
+      @if (loading()) { Loading rooms… } @else { No rooms match your filters. }
+    </div>
+  }
+</div>

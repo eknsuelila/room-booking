@@ -1,0 +1,67 @@
+# =====================================================================================
+# Default ("dev") configuration. Used when you run:  ./mvnw spring-boot:run
+#
+# Spring Boot reads this file at startup and binds each key to the matching setting.
+# Values like ${JWT_SECRET:default} mean "use the JWT_SECRET environment variable if it is
+# set, otherwise use the default after the colon".
+#
+# The "prod" profile (application-prod.yml) overrides some of these keys. Activate it with
+# the environment variable SPRING_PROFILES_ACTIVE=prod (docker-compose does this for you).
+# =====================================================================================
+server:
+  # 8084 instead of the usual 8080 because other apps run on this machine at the same time.
+  # The Angular dev server proxies /api/* here (see frontend/proxy.conf.json).
+  port: 8084
+
+spring:
+  application:
+    name: room-booking
+  datasource:
+    # In-memory H2 database: created on startup, thrown away on shutdown. Zero setup.
+    #  - MODE=PostgreSQL makes H2 accept PostgreSQL-flavoured SQL, so the SAME Flyway
+    #    migration files run on H2 (dev/tests) and real PostgreSQL (prod).
+    #  - DATABASE_TO_LOWER=TRUE stores identifiers in lower case, like PostgreSQL does.
+    #  - DEFAULT_NULL_ORDERING=HIGH sorts NULLs like PostgreSQL (last in ASC order).
+    url: jdbc:h2:mem:roombooking;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    username: sa
+    password:
+  h2:
+    console:
+      # Browse the in-memory DB at http://localhost:8084/h2-console
+      # (JDBC URL: jdbc:h2:mem:roombooking, user: sa, empty password). Disabled in prod.
+      enabled: true
+  jpa:
+    # "Open Session In View" keeps a DB connection open while JSON is being written. We turn
+    # it off so lazy-loading accidents fail loudly in development instead of silently running
+    # extra queries. Services therefore convert entities to DTOs inside their transactions.
+    open-in-view: false
+    hibernate:
+      # The schema is owned by Flyway migrations. Hibernate only VALIDATES that the entity
+      # classes match the tables and refuses to start if they don't (it never alters tables).
+      ddl-auto: validate
+  flyway:
+    # Run db/migration/V*.sql scripts on startup, in version order, exactly once each.
+    enabled: true
+
+app:
+  # Insert demo users, rooms and bookings on startup (see config/DemoDataSeeder.java).
+  seed-demo-data: true
+  cors:
+    # Browsers block cross-origin calls unless the server allows the calling origin.
+    # The Angular dev server (ng serve --port 4304) proxies /api to this backend WITHOUT
+    # rewriting the Host header (changeOrigin: false in proxy.conf.json), but the browser
+    # still sends "Origin: http://localhost:4304". Spring compares that Origin with the Host;
+    # if it differs, the request is treated as cross-origin and must be allowed here,
+    # otherwise Spring answers 403 "Invalid CORS request". Comma-separated list.
+    allowed-origins: http://localhost:4304,http://localhost:4200
+  jwt:
+    # Base64-encoded HMAC key used to sign tokens (must decode to >= 256 bits for HS256).
+    # Dev-only default. ALWAYS override it in production with the JWT_SECRET environment variable,
+    # otherwise anyone who reads this file could forge tokens.
+    secret: ${JWT_SECRET:ZGV2LW9ubHktc2VjcmV0LWZvci1yb29tLWJvb2tpbmctY2hhbmdlLW1lLTEyMzQ1Njc4OTA=}
+    expiration-ms: 86400000   # 24 hours; after that the user has to log in again
+
+springdoc:
+  swagger-ui:
+    # Interactive API documentation: http://localhost:8084/swagger-ui.html
+    path: /swagger-ui.html

@@ -1,0 +1,4 @@
+# Keep shell scripts Unix-style and Windows scripts Windows-style on every OS
+*.sh   text eol=lf
+mvnw   text eol=lf
+*.cmd  text eol=crlf

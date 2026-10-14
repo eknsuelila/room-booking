@@ -1,0 +1,94 @@
+<a class="back" routerLink="/rooms">← All rooms</a>
+
+@if (error()) {
+  <div class="alert" role="alert">{{ error() }}</div>
+}
+
+<div class="layout">
+  <!-- Left: room information -->
+  <aside class="card info">
+    @if (room(); as r) {
+      <h1>{{ r.name }}</h1>
+      <p class="muted">{{ r.location }}</p>
+      @if (!r.active) {
+        <p><span class="badge badge-inactive">Inactive — not bookable</span></p>
+      }
+      <dl>
+        <dt>Capacity</dt>
+        <dd>{{ r.capacity }} people</dd>
+        @if (r.description) {
+          <dt>About</dt>
+          <dd>{{ r.description }}</dd>
+        }
+        <dt>Amenities</dt>
+        <dd>
+          <div class="chips">
+            @for (a of r.amenities; track a) { <span class="chip">{{ a }}</span> } @empty { <span class="muted">None</span> }
+          </div>
+        </dd>
+      </dl>
+      @if (r.active) {
+        <a class="btn btn-primary" routerLink="/bookings/new" [queryParams]="{ roomId: r.id, date: day() }">Book this room</a>
+      }
+    } @else {
+      <p class="muted">Loading…</p>
+    }
+  </aside>
+
+  <!-- Right: day timeline -->
+  <section class="card timeline-card">
+    <div class="day-nav">
+      <button class="btn btn-secondary btn-sm" type="button" (click)="shiftDay(-1)" aria-label="Previous day">‹</button>
+      <input class="input date-input" type="date" [value]="day()" (change)="goToDay($any($event.target).value)"
+             aria-label="Day" />
+      <button class="btn btn-secondary btn-sm" type="button" (click)="shiftDay(1)" aria-label="Next day">›</button>
+      @if (day() !== today) {
+        <button class="btn btn-ghost btn-sm" type="button" (click)="goToDay(today)">Today</button>
+      }
+      <!-- 'T00:00' makes DatePipe parse the date in LOCAL time (a bare date string is parsed as UTC). -->
+      <span class="day-label">{{ day() + 'T00:00' | date: 'EEEE d MMMM' }}</span>
+    </div>
+
+    <p class="legend muted">
+      <span class="swatch free"></span> Free – click to book
+      <span class="swatch busy"></span> Booked
+      <span class="swatch mine"></span> Yours
+    </p>
+
+    <div class="timeline" [class.is-loading]="loading()">
+      <!-- Hour labels: one per 2 rows (rows are 30 min) -->
+      <div class="hours" aria-hidden="true">
+        @for (h of hours; track h) { <div class="hour">{{ h }}</div> }
+      </div>
+
+      <div class="grid">
+        <!-- Layer 1: 24 half-hour rows. Free + not past = clickable. -->
+        @for (slot of slots(); track slot.start; let i = $index) {
+          <button type="button" class="slot"
+                  [class.free]="slot.free && !slot.past && room()?.active"
+                  [class.past]="slot.past"
+                  [class.hour-start]="i % 2 === 0"
+                  [disabled]="!slot.free || slot.past || !room()?.active"
+                  [attr.aria-label]="slot.start + ' to ' + slot.end + (slot.free ? ' free' : ' booked')"
+                  (click)="pickSlot(i)">
+            @if (slot.free && !slot.past && room()?.active) {
+              <span class="slot-hint">+ Book {{ slot.start }}</span>
+            }
+          </button>
+        }
+
+        <!-- Layer 2: booked blocks, absolutely positioned using percentages of the day -->
+        @for (b of blocks(); track b.entry.bookingId) {
+          <div class="block" [class.mine]="b.entry.mine"
+               [style.top.%]="b.pos.top" [style.height.%]="b.pos.height">
+            <strong>{{ b.entry.title }}</strong>
+            <span>{{ b.entry | timeRange }}@if (b.entry.bookedBy) { · {{ b.entry.bookedBy }} }</span>
+            @if (canEdit(b.entry)) {
+              <a class="block-link" [routerLink]="['/bookings', b.entry.bookingId, 'edit']">Edit</a>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+</div>

@@ -1,0 +1,103 @@
+<div class="page-header">
+  <div>
+    <h1>{{ isEdit ? 'Reschedule booking' : 'Book a room' }}</h1>
+    <p>Bookings run 08:00–20:00 in 15-minute steps, for 15 minutes up to 4 hours.</p>
+  </div>
+</div>
+
+@if (error()) {
+  <div class="alert" role="alert">{{ error() }}</div>
+}
+
+<!-- 409 Conflict: the slot was taken (maybe seconds ago by someone else). Offer a way out. -->
+@if (conflict()) {
+  <div class="alert alert-conflict" role="alert">
+    <strong>That time is no longer available</strong>
+    {{ conflict() }}
+    <div class="conflict-actions">
+      <a class="btn btn-secondary btn-sm" routerLink="/find" [queryParams]="findParams()">Find another room at this time</a>
+      @if (form.controls.roomId.value; as rid) {
+        <a class="btn btn-ghost btn-sm" [routerLink]="['/rooms', rid]" [queryParams]="{ date: form.controls.date.value }">
+          See this room's day
+        </a>
+      }
+    </div>
+  </div>
+}
+
+@if (loading()) {
+  <p class="muted">Loading…</p>
+} @else {
+  <form class="card" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="form-grid">
+      <div class="field full">
+        <label for="roomId">Room *</label>
+        <!-- formControlName on a <select> keeps the selection in sync even though the options
+             arrive later (after the rooms request), unlike a plain [value] binding. -->
+        <select id="roomId" class="input" formControlName="roomId">
+          <option [ngValue]="null" disabled>Choose a room…</option>
+          @for (r of rooms(); track r.id) {
+            <option [ngValue]="r.id">{{ r.name }} — {{ r.location }} ({{ r.capacity }} people)</option>
+          }
+        </select>
+        @if (showError('roomId')) { <span class="error">Please choose a room.</span> }
+      </div>
+
+      <div class="field full">
+        <label for="title">Title *</label>
+        <input id="title" class="input" formControlName="title" placeholder="e.g. Sprint planning" />
+        @if (showError('title')) { <span class="error">A title is required.</span> }
+      </div>
+
+      <div class="field">
+        <label for="date">Date *</label>
+        <input id="date" class="input" type="date" formControlName="date" [min]="minDate" />
+        @if (showError('date')) { <span class="error">Pick a date.</span> }
+      </div>
+
+      <div class="field">
+        <label for="attendees">Attendees *</label>
+        <input id="attendees" class="input" type="number" min="1" formControlName="attendees" />
+        @if (selectedRoom(); as room) {
+          @if (overCapacity()) {
+            <span class="error">{{ room.name }} holds at most {{ room.capacity }} people.</span>
+          } @else {
+            <span class="hint muted">{{ room.name }} holds up to {{ room.capacity }}.</span>
+          }
+        }
+      </div>
+
+      <div class="field">
+        <label for="startTime">Start *</label>
+        <select id="startTime" class="input" formControlName="startTime">
+          @for (t of times; track t) { <option [value]="t">{{ t }}</option> }
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="endTime">End *</label>
+        <select id="endTime" class="input" formControlName="endTime">
+          @for (t of times; track t) { <option [value]="t">{{ t }}</option> }
+        </select>
+        @if (form.hasError('endBeforeStart')) {
+          <span class="error">End must be after start.</span>
+        } @else if (duration()) {
+          <span class="hint muted">Duration: {{ duration() }}</span>
+        }
+      </div>
+
+      <div class="field full">
+        <label for="description">Description</label>
+        <textarea id="description" class="input" formControlName="description"
+                  placeholder="Agenda, dial-in details… (optional)"></textarea>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <a class="btn btn-secondary" routerLink="/my-bookings">Cancel</a>
+      <button class="btn btn-primary" type="submit" [disabled]="saving() || overCapacity()">
+        {{ saving() ? 'Saving…' : (isEdit ? 'Save changes' : 'Book room') }}
+      </button>
+    </div>
+  </form>
+}
