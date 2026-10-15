@@ -1,5 +1,8 @@
 # Room Booking System
 
+**🔗 Live demo: [room-booking.edsuelila.dev](https://room-booking.edsuelila.dev)**: log in with `admin@example.com` (admin) or `user@example.com`, password `password123`.
+The demo accounts are shared by all visitors, so data you see may have been changed by someone else.
+
 A full-stack **meeting room booking system** built with **Spring Boot 3 (Java 17)** and **Angular 17**.
 Employees browse rooms, see each room's day on a visual timeline, find a free room for a time slot and
 book it in two clicks; admins manage rooms, oversee every booking and watch utilization on a dashboard.
